@@ -15,13 +15,29 @@
     <td>/signup</td>
     <td>POST</td>
     <td>Untuk signup dokter</td>
-    <td>nama, npa, alamat, username, password, phone, email, tanggal_lahir </td>
+    <td>
+      <ul>
+        <li>nama</li>
+        <li>npa</li>
+        <li>alamat</li>
+        <li>username</li>
+        <li>password</li>
+        <li>phone</li>
+        <li>email</li>
+        <li>tanggal_lahir</li>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>/login</td>
     <td>POST</td>
     <td>Untuk login dokter, res yang akan di berikan berupa token, jwt</td>
-    <td>username, login </td>
+    <td>
+      <ul>
+        <li>username</li>
+        <li>password</li>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>/doctor</td>
@@ -332,9 +348,40 @@
   </tr>
 </table>
 
-> For decrypt in client, look at server/util/encrypt
 
 ## Tambahan
+
+```javascript
+import crypto from "crypto";
+import {useState, useEffect} from 'react';
+
+const [pasien, setPasien] = useState({});
+
+useEffect(() => {
+  axios.get("/pasien").then(res => {
+    let newData = {};
+    const decriptNik = decryptNik(res.data.nik);
+    res.data.nik = decriptNik;
+    // terusin decryptnya
+    
+    setPasien(res.data)
+  })
+},[])
+
+const decryptNik = (encrypt) => {
+  const password = "nik";
+  const key = crypto.scryptSync(password, "docpro", 24);
+  const iv = Buffer.alloc(16, 0);
+  const decipher = crypto.createDecipheriv(algorithm, key, iv);
+  var decrypted =
+    decipher.update(encrypt, "hex", "utf8") + decipher.final("utf8");
+
+  return decrypted;
+};
+
+// Bisa dilihat di server/util/encrypt.js
+// Harus sama, jangan ada yang diubah !!
+```
 
 `Contoh untuk send req api dari form data`
 
