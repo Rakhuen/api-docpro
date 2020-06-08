@@ -42,11 +42,13 @@ exports.addPasien = async (req, res) => {
     data.alamat = alamat;
     data.phone = phone;
 
+    if (data.alamat.length > 255)
+      return res.status(500).json({
+        message: "Alamat tidak boleh terlalu panjang, singkat, padat dan jelas",
+      });
     const noinduk = await knex("pasien").where({ nik: data.nik });
     if (noinduk.length > 0)
       return res.status(400).json({ message: "Pasien sudah ada" });
-    if (data.alamat.length > 255)
-      return res.status(400).json({ message: "Alamat terlalu panjang" });
 
     if (!req.file) {
       await knex("pasien").insert(data);
@@ -134,6 +136,10 @@ exports.updatePasien = async (req, res) => {
     data.alamat = alamat;
     data.phone = phone;
 
+    if (data.alamat.length > 255)
+      return res.status(500).json({
+        message: "Alamat tidak boleh terlalu panjang, singkat, padat dan jelas",
+      });
     const findUser = await knex("pasien").where({
       id_pasien,
       is_deleted: false,
