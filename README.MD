@@ -355,7 +355,7 @@
 import crypto from "crypto";
 import {useState, useEffect} from 'react';
 
-const [pasien, setPasien] = useState({});
+const [pasien, setPasien] = useState([]);
 
 useEffect(() => {
   axios.get("/pasien").then(res => {
@@ -364,7 +364,7 @@ useEffect(() => {
     res.data.nik = decriptNik;
     // terusin decryptnya
     
-    setPasien(res.data)
+    setPasien(res.data);
   })
 },[])
 
