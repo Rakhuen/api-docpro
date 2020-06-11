@@ -26,6 +26,8 @@ exports.addPasien = async (req, res) => {
     phone: req.body.phone,
     added_on: today,
     is_deleted: false,
+    photo: "default.png",
+    url_photo: "default.png",
   };
 
   const { valid, errors } = validatePasien(data);

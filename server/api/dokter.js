@@ -26,6 +26,8 @@ exports.signupDokter = async (req, res) => {
     email: req.body.email,
     tanggal_lahir: req.body.tanggal_lahir,
     added_on: today,
+    photo: "default.png",
+    url_photo: "default.png",
     is_deleted: false,
   };
 
