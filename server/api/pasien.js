@@ -53,8 +53,17 @@ exports.addPasien = async (req, res) => {
       return res.status(400).json({ message: "Pasien sudah ada" });
 
     if (!req.file) {
-      await knex("pasien").insert(data);
-      return res.status(200).json({ message: "User is added" });
+      const result = await knex("pasien").insert(data);
+      const id_pasien = result;
+
+      let newPasien = await knex("pasien").where({ id_pasien });
+
+      const formatDate = moment(newPasien[0].added_on).format("YYYY-MM-DD");
+      newPasien[0].added_on = formatDate;
+
+      const pasien = newPasien[0];
+
+      return res.status(200).json(pasien);
     }
 
     const path = req.file.path;
