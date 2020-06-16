@@ -1,6 +1,7 @@
 const connection = require("../config/connection");
 const knex = require("knex")(connection);
 const moment = require("moment");
+const encrypt = require("../util/encrypt");
 
 exports.getHitory = async (req, res) => {
   if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
@@ -16,13 +17,18 @@ exports.getHitory = async (req, res) => {
     history.forEach((hstry) => {
       const formatDate = moment(hstry.tanggal).format("YYYY-MM-DD");
 
+      const nik = encrypt.decryptNik(hstry.nik);
+      const alamat = encrypt.decryptAlamat(hstry.alamat);
+      const phone = encrypt.decryptPhone(hstry.phone);
+      const tanggal_lahir = encrypt.decryptTtl(hstry.tanggal_lahir);
+
       let pasien = {
         id_pasien: hstry.id_pasien,
         nama: hstry.nama,
-        nik: hstry.nik,
-        tanggal_lahir: hstry.tanggal_lahir,
-        alamat: hstry.alamat,
-        phone: hstry.phone,
+        nik,
+        tanggal_lahir,
+        alamat,
+        phone,
         photo: hstry.url_photo,
       };
       let appointmet = {

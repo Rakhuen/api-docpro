@@ -230,9 +230,20 @@ exports.getAllPasien = async (req, res) => {
       .orderBy("id_pasien", "desc");
 
     let allPasien = [];
+
     pasien.forEach((psien) => {
       const formatDate = moment(psien.added_on).format("YYYY-MM-DD");
       psien.added_on = formatDate;
+
+      const nik = encrypt.decryptNik(psien.nik);
+      const alamat = encrypt.decryptAlamat(psien.alamat);
+      const phone = encrypt.decryptPhone(psien.phone);
+      const ttl = encrypt.decryptTtl(psien.tanggal_lahir);
+
+      psien.nik = nik;
+      psien.alamat = alamat;
+      psien.phone = phone;
+      psien.tanggal_lahir = ttl;
 
       allPasien.push(psien);
     });
@@ -258,7 +269,17 @@ exports.getDetailsPasien = async (req, res) => {
     findPasien[0].added_on = formatDate;
     const pasien = findPasien[0];
 
+    const nik = encrypt.decryptNik(pasien.nik);
+    const alamat = encrypt.decryptAlamat(pasien.alamat);
+    const phone = encrypt.decryptPhone(pasien.phone);
+    const ttl = encrypt.decryptTtl(pasien.tanggal_lahir);
+    pasien.nik = nik;
+    pasien.alamat = alamat;
+    pasien.phone = phone;
+    pasien.tanggal_lahir = ttl;
+
     let historys = [];
+
     const findHistory = await knex("history")
       .where({
         id_pasien,
