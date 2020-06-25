@@ -348,40 +348,7 @@
   </tr>
 </table>
 
-
 ## Tambahan
-
-```javascript
-import crypto from "crypto";
-import {useState, useEffect} from 'react';
-
-const [pasien, setPasien] = useState([]);
-
-useEffect(() => {
-  axios.get("/pasien").then(res => {
-    let newData = {};
-    const decriptNik = decryptNik(res.data.nik);
-    res.data.nik = decriptNik;
-    // terusin decryptnya
-    
-    setPasien(res.data);
-  })
-},[])
-
-const decryptNik = (encrypt) => {
-  const password = "nik";
-  const key = crypto.scryptSync(password, "docpro", 24);
-  const iv = Buffer.alloc(16, 0);
-  const decipher = crypto.createDecipheriv(algorithm, key, iv);
-  var decrypted =
-    decipher.update(encrypt, "hex", "utf8") + decipher.final("utf8");
-
-  return decrypted;
-};
-
-// Bisa dilihat di server/util/encrypt.js
-// Harus sama, jangan ada yang diubah !!
-```
 
 `Contoh untuk send req api dari form data`
 
