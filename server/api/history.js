@@ -4,7 +4,12 @@ const moment = require("moment");
 const encrypt = require("../util/encrypt");
 
 exports.getHitory = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
 
   try {
     let newHistory = [];
@@ -14,9 +19,15 @@ exports.getHitory = async (req, res) => {
       .orderBy("tanggal", "desc")
       .orderBy("jam", "desc");
 
+    if (history.length === 0)
+      return res.status(404).json({
+        message: "History is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
+
     history.forEach((hstry) => {
       const formatDate = moment(hstry.tanggal).format("YYYY-MM-DD");
-
       const nik = encrypt.decryptNik(hstry.nik);
       const alamat = encrypt.decryptAlamat(hstry.alamat);
       const phone = encrypt.decryptPhone(hstry.phone);
@@ -50,6 +61,11 @@ exports.getHitory = async (req, res) => {
 
     return res.status(200).json(newHistory);
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };

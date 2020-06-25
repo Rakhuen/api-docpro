@@ -4,7 +4,12 @@ const { validateDiagnosa } = require("../validation/isValid");
 const moment = require("moment");
 
 exports.addNewDiagnosa = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
   const id_doctor = req.id_doctor;
   const today = moment(Date.now()).format("YYYY-MM-DD");
 
@@ -12,6 +17,8 @@ exports.addNewDiagnosa = async (req, res) => {
     id_appointment: req.body.id_appointment,
     penanganan: req.body.penanganan,
     total_biaya: req.body.total_biaya,
+    services: req.body.services,
+    drugs: req.body.drugs,
   };
 
   const { valid, errors } = validateDiagnosa(data);
@@ -22,38 +29,59 @@ exports.addNewDiagnosa = async (req, res) => {
       id_appointment: data.id_appointment,
     });
     if (findAppointment.length === 0)
-      return res.status(404).json({ message: "Appointment is not found" });
-
+      return res.status(404).json({
+        message: "Appointment is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
     const filterDiagnosa = await knex("diagnosa").where({
       id_appointment: data.id_appointment,
     });
     if (filterDiagnosa.length > 0)
-      return res.status(400).json({ message: "Appointment sudah di diagnosa" });
-
+      return res.status(400).json({
+        message: "Appointment is already diagnosed",
+        status: 400,
+        date: new Date().getTime(),
+      });
     const findDoctor = await knex("doctor").where({ id_doctor });
     data.doctor = findDoctor[0].nama;
-
     const diagnosa = await knex("diagnosa").insert(data);
     const id_diagnosa = diagnosa;
     const id_appointment = await knex("diagnosa").where({ id_diagnosa });
-
     await knex("appointment")
       .where("id_appointment", id_appointment[0].id_appointment)
       .update({ is_checked: true });
-
     const findPhoto = await knex("photo_data").where(
       "id_appointment",
       id_appointment[0].id_appointment
     );
-
     if (findPhoto.length > 0) {
       await knex("photo_data")
         .where("id_appointment", id_appointment[0].id_appointment)
         .update({ is_checked: true, added_on: today });
     }
 
-    return res.status(200).json({ message: "Diagnosa is avalaible" });
+    const splitDrugs = data.drugs.split(",");
+    const drugs = await knex("drugs").whereIn("id_drug", splitDrugs);
+    drugs.forEach(async (drug) => {
+      await knex("drugs")
+        .where("id_drug", drug.id_drug)
+        .update({
+          drug_count: drug.drug_count - 1,
+        });
+    });
+
+    return res.status(200).json({
+      message: "Diagnosa is successfully created",
+      status: 200,
+      date: new Date().getTime(),
+    });
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };

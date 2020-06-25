@@ -4,6 +4,7 @@ const fs = require("fs");
 const moment = require("moment");
 const { validatePasien } = require("../validation/isValid");
 const encrypt = require("../util/encrypt");
+const { resolve } = require("path");
 
 const cloudinary = require("cloudinary").v2;
 
@@ -14,7 +15,12 @@ cloudinary.config({
 });
 
 exports.addPasien = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
 
   const today = moment(Date.now()).format("YYYY-MM-DD");
 
@@ -44,13 +50,20 @@ exports.addPasien = async (req, res) => {
     data.alamat = alamat;
     data.phone = phone;
 
-    if (data.alamat.length > 255)
-      return res.status(500).json({
+    if (data.alamat.length >= 255)
+      return res.status(400).json({
         message: "Alamat tidak boleh terlalu panjang, singkat, padat dan jelas",
+        status: 400,
+        date: new Date().getTime(),
       });
+
     const noinduk = await knex("pasien").where({ nik: data.nik });
     if (noinduk.length > 0)
-      return res.status(400).json({ message: "Pasien sudah ada" });
+      return res.status(400).json({
+        message: "Pasien is already registered",
+        status: 400,
+        date: new Date().getTime(),
+      });
 
     if (!req.file) {
       const result = await knex("pasien").insert(data);
@@ -90,25 +103,44 @@ exports.addPasien = async (req, res) => {
 
     return res.status(200).json(pasien);
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong", err });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+    });
   }
 };
 
 exports.searchPasien = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
+
   const nama = req.query.nama;
   try {
+    if (nama === "")
+      return res.status(404).json({
+        message: "Parameter is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
+
     const user = await knex("pasien")
       .where("nama", "like", `%${nama}%`)
       .andWhere({ is_deleted: false })
       .orderBy("id_pasien", "desc");
 
     if (user.length === 0)
-      return res.status(404).json({ message: "Pasien not found" });
+      return res.status(404).json({
+        message: "Pasien is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     let allPasien = [];
-    console.log(user);
-
     user.forEach((pasien) => {
       const formatDate = moment(pasien.added_on).format("YYYY-MM-DD");
       pasien.added_on = formatDate;
@@ -117,12 +149,21 @@ exports.searchPasien = async (req, res) => {
 
     return res.status(200).json(allPasien);
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+    });
   }
 };
 
 exports.updatePasien = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
   const id_pasien = req.query.id;
 
   let data = {
@@ -147,22 +188,32 @@ exports.updatePasien = async (req, res) => {
     data.alamat = alamat;
     data.phone = phone;
 
-    if (data.alamat.length > 255)
-      return res.status(500).json({
+    if (data.alamat.length >= 255)
+      return res.status(400).json({
         message: "Alamat tidak boleh terlalu panjang, singkat, padat dan jelas",
+        status: 400,
+        date: new Date().getTime(),
       });
     const findUser = await knex("pasien").where({
       id_pasien,
       is_deleted: false,
     });
     if (findUser.length === 0)
-      return res.status(404).json({ message: "Pasien is not found" });
+      return res.status(404).json({
+        message: "Pasien is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     const pasien = findUser[0];
     const oldImagePasien = pasien.photo;
     if (!req.file) {
       await knex("pasien").where({ id_pasien, is_deleted: false }).update(data);
-      return res.status(200).json({ message: "Pasien is up to date" });
+      return res.status(200).json({
+        message: "Pasien is up to date",
+        status: 200,
+        date: new Date().getTime(),
+      });
     }
 
     const path = req.file.path;
@@ -184,23 +235,39 @@ exports.updatePasien = async (req, res) => {
     const photo = findPasien[0].photo;
 
     if (oldImagePasien === photo) {
-      return res
-        .status(200)
-        .json({ message: "Pasien is up to date and photo is not changed" });
+      return res.status(200).json({
+        message: "Pasien is up to date and photo is not changed",
+        status: 200,
+        date: new Date().getTime(),
+      });
     } else if (oldImagePasien !== photo) {
       const deleteImg = await cloudinary.uploader.destroy(
         `img-pasien/${oldImagePasien}`
       );
       if (deleteImg.result === "ok")
-        return res.status(200).json({ message: "Pasien is up to date" });
+        return res.status(200).json({
+          message: "Pasien is up to date",
+          status: 200,
+          date: new Date().getTime(),
+        });
     }
   } catch (err) {
-    return res.status(400).json({ message: "Something wrong" });
+    return res.status(400).json({
+      message: "Something wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
 exports.deletePasien = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
   const id_pasien = req.query.id;
 
   try {
@@ -209,20 +276,38 @@ exports.deletePasien = async (req, res) => {
       is_deleted: false,
     });
     if (findUser.length === 0)
-      return res.status(404).json({ message: "Pasien is not found" });
+      return res.status(404).json({
+        message: "Pasien is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     await knex("pasien").where({ id_pasien }).update({
       is_deleted: true,
     });
 
-    return res.status(200).json({ message: "Pasien is deleted" });
+    return res.status(200).json({
+      message: "Pasien is deleted",
+      status: 200,
+      date: new Date().getTime(),
+    });
   } catch (err) {
-    return res.status(400).json({ message: "Something wrong" });
+    return res.status(400).json({
+      message: "Something wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
 exports.getAllPasien = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
   try {
     let pasien = await knex("pasien")
       .select("*")
@@ -249,13 +334,25 @@ exports.getAllPasien = async (req, res) => {
     });
     return res.status(200).json(allPasien);
   } catch (err) {
-    return res.status(400).json({ message: "Something wrong" });
+    return res.status(400).json({
+      message: "Something wrong",
+      status: 400,
+      date: new Date().getTime(),
+    });
   }
 };
 
 exports.getDetailsPasien = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
+
   const id_pasien = req.query.id;
+  let appointment;
+  let diagnosa;
 
   try {
     let findPasien = await knex("pasien").where({
@@ -264,7 +361,11 @@ exports.getDetailsPasien = async (req, res) => {
     });
 
     if (findPasien.length === 0)
-      return res.status(404).json({ message: "Pasien is not found" });
+      return res.status(404).json({
+        message: "Pasien is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
     const formatDate = moment(findPasien[0].added_on).format("YYYY-MM-DD");
     findPasien[0].added_on = formatDate;
     const pasien = findPasien[0];
@@ -277,7 +378,6 @@ exports.getDetailsPasien = async (req, res) => {
     pasien.alamat = alamat;
     pasien.phone = phone;
     pasien.tanggal_lahir = ttl;
-
     let historys = [];
 
     const findHistory = await knex("history")
@@ -285,13 +385,18 @@ exports.getDetailsPasien = async (req, res) => {
         id_pasien,
         is_deleted: false,
       })
-      .orderBy("tanggal", "desc");
+      .orderBy("tanggal", "desc")
+      .orderBy("jam", "desc");
 
-    findHistory.forEach((history) => {
+    findHistory.map(async (history) => {
       const formatDate = moment(history.tanggal).format("YYYY-MM-DD");
       history.tanggal = formatDate;
+      const splitService = history.services.split(",");
 
-      const appointment = {
+      let services;
+      services = await knex("services").whereIn("id_service", splitService);
+
+      appointment = {
         id_appointment: history.id_appointment,
         keperluan: history.keperluan,
         tanggal: history.tanggal,
@@ -299,12 +404,13 @@ exports.getDetailsPasien = async (req, res) => {
         keluhan: history.keluhan,
         is_checked: history.is_checked,
       };
-      const diagnosa = {
+      diagnosa = {
         penanganan: history.penanganan,
         doctor: history.doctor,
         total_biaya: history.total_biaya,
+        services,
+        drugs: history.drugs,
       };
-
       historys.push({ appointment, diagnosa });
     });
 
@@ -322,10 +428,23 @@ exports.getDetailsPasien = async (req, res) => {
       photos.push(photo);
     });
 
+    historys.forEach(async (history) => {
+      const splitDrugs = history.diagnosa.drugs.split(",");
+      const drugs = await knex("drugs").whereIn("id_drug", splitDrugs);
+      history.diagnosa.drugs = drugs;
+      return history;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
     const allUser = { pasien, historys, photos };
 
     return res.status(200).json(allUser);
   } catch (err) {
-    return res.status(400).json({ message: "Something wrong" });
+    return res.status(400).json({
+      message: "Something wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };

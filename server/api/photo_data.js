@@ -13,7 +13,12 @@ cloudinary.config({
 });
 
 exports.addNewPhotoData = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
   const today = moment(Date.now()).format("YYYY-MM-DD");
 
   let data = {
@@ -29,10 +34,18 @@ exports.addNewPhotoData = async (req, res) => {
       is_deleted: false,
     });
     if (searchPasien.length === 0)
-      return res.status(404).json({ message: "Pasien not found" });
+      return res.status(404).json({
+        message: "Pasien not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     if (!req.file)
-      return res.status(404).json({ message: "Photo is not found" });
+      return res.status(404).json({
+        message: "File photo is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     const path = req.file.path;
     const upload = await cloudinary.uploader.upload(
@@ -48,14 +61,28 @@ exports.addNewPhotoData = async (req, res) => {
     data.url_photo = upload.url;
 
     await knex("photo_data").insert(data);
-    return res.status(200).json({ message: "Photo is added" });
+    return res.status(200).json({
+      message: "Photo is added",
+      status: 200,
+      date: new Date().getTime(),
+    });
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
 exports.deletePhotoData = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
   const id = req.query.id;
   try {
     let photo = null;
@@ -64,19 +91,36 @@ exports.deletePhotoData = async (req, res) => {
       is_checked: true,
     });
     if (find.length === 0)
-      return res.status(404).json({ message: "Photo is not found" });
+      return res.status(404).json({
+        message: "Photo is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     photo = find[0].photo;
     await knex("photo_data").where({ id_photo: id, is_checked: true }).del();
 
     if (photo === null) {
-      return res.status(200).json({ message: "Photo is deleted" });
+      return res.status(200).json({
+        message: "Photo is deleted",
+        status: 200,
+        date: new Date().getTime(),
+      });
     } else {
       const deleteImg = await cloudinary.uploader.destroy(`img-data/${photo}`);
       if (deleteImg.result === "ok")
-        return res.status(200).json({ message: "Photo is deleted" });
+        return res.status(200).json({
+          message: "Photo is deleted",
+          status: 200,
+          date: new Date().getTime(),
+        });
     }
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };

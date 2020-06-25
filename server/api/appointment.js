@@ -13,7 +13,12 @@ cloudinary.config({
 });
 
 exports.newAppointment = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
 
   let data = {
     id_pasien: req.body.id_pasien,
@@ -35,17 +40,29 @@ exports.newAppointment = async (req, res) => {
       id_pasien: data.id_pasien,
     });
     if (checkPasien.length === 0)
-      return res.status(404).json({ message: "Pasien is not found" });
+      return res.status(404).json({
+        message: "Pasien is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
     const checkTanggalDanJam = await knex("appointment").where({
       tanggal: data.tanggal,
       jam: data.jam,
     });
     if (checkTanggalDanJam.length > 0)
-      return res.status(400).json({ message: "Appointment sudah ada" });
+      return res.status(400).json({
+        message: "Appointment already exists",
+        status: 400,
+        date: new Date().getTime(),
+      });
 
     if (!req.file) {
       await knex("appointment").insert(data);
-      return res.status(200).json({ message: "Appointment berhasil dibuat" });
+      return res.status(200).json({
+        message: "Appointment is successfully created",
+        status: 200,
+        date: new Date().getTime(),
+      });
     }
 
     const result = await knex("appointment").insert(data);
@@ -72,14 +89,29 @@ exports.newAppointment = async (req, res) => {
 
     await knex("photo_data").insert(photoForData);
 
-    return res.status(200).json({ message: "Appointment berhasil dibuat" });
+    return res.status(200).json({
+      message: "Appointment is successfully created",
+      status: 200,
+      date: new Date().getTime(),
+    });
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
 exports.deleteAppointment = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
+
   const id = req.query.id;
   try {
     const find = await knex("appointment").where({
@@ -87,7 +119,11 @@ exports.deleteAppointment = async (req, res) => {
       is_checked: false,
     });
     if (find.length === 0)
-      return res.status(404).json({ message: "Appointment is Not found" });
+      return res.status(404).json({
+        message: "Appointment is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     let photo;
     const photo_data = await knex("photo_data").where("id_appointment", id);
@@ -101,49 +137,78 @@ exports.deleteAppointment = async (req, res) => {
     await knex("appointment").where("id_appointment", id).del();
 
     if (photo === null) {
-      return res.status(200).json({ message: "Appointment is deleted" });
+      return res.status(200).json({
+        message: "Appointment is deleted",
+        status: 200,
+        date: new Date().getTime(),
+      });
     } else {
       const deleteImg = await cloudinary.uploader.destroy(`img-data/${photo}`);
       if (deleteImg.result === "ok")
-        return res.status(200).json({ message: "Appointment is deleted" });
+        return res.status(200).json({
+          message: "Appointment is deleted",
+          status: 200,
+          date: new Date().getTime(),
+        });
     }
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
 exports.appointment = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
 
   const today = moment(Date.now()).format("YYYY-MM-DD");
   try {
     const appointment = await knex("appointment_details").where({
       tanggal: today,
       is_checked: false,
+      is_deleted: false,
     });
 
     if (appointment.length === 0)
-      return res.status(404).json({ message: "Belum ada appointment" });
+      return res.status(404).json({
+        message: "Appointment is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     const newAppointment = [];
 
     appointment.forEach((ap) => {
       const newd = moment(ap.tanggal).format("YYYY-MM-DD");
-      //   const todayDate = new Date().toISOString().slice(0, 10);
-      //   if (ap.tanggal < todayDate) {
-      //     return delete ap;
-      //   }
       ap.tanggal = newd;
       newAppointment.push(ap);
     });
     return res.status(200).json(newAppointment);
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
 exports.filterAppointment = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
   const tanggal = req.query.tanggal;
 
   let newTanggal = tanggal.split("/").reverse().join("-");
@@ -154,12 +219,18 @@ exports.filterAppointment = async (req, res) => {
   }
 
   try {
-    const appointment = await knex("appointment_details")
-      .where("tanggal", newTanggal)
-      .andWhere("is_checked", false);
+    const appointment = await knex("appointment_details").where({
+      tanggal: newTanggal,
+      is_checked: false,
+      is_deleted: false,
+    });
 
     if (appointment.length === 0)
-      return res.status(404).json({ message: "Appointment tidak ditemukan" });
+      return res.status(404).json({
+        message: "Appointment is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     const newAppointment = [];
     appointment.forEach((ap) => {
@@ -170,21 +241,37 @@ exports.filterAppointment = async (req, res) => {
 
     return res.status(200).json(newAppointment);
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 401,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
 exports.getSingleAppointment = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
+
   const id_appointment = req.query.id;
 
   try {
     const appointment = await knex("appointment_details").where({
       id_appointment,
       is_checked: false,
+      is_deleted: false,
     });
     if (appointment.length === 0)
-      return res.status(404).json({ message: "Appointment tidak ditemukan" });
+      return res.status(404).json({
+        message: "Appointment is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     let dataAppointment = appointment[0];
     const formatDate = moment(dataAppointment.tanggal).format("YYYY-MM-DD");
@@ -192,6 +279,11 @@ exports.getSingleAppointment = async (req, res) => {
 
     return res.status(200).json(dataAppointment);
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };

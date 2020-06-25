@@ -219,6 +219,8 @@ exports.validateDiagnosa = (data) => {
   //   Check penanganan
   if (isEmpty(data.penanganan))
     errors.penanganan = "Penanganan tidak boleh kosong";
+  if (isEmpty(data.services)) errors.services = "Services tidak boleh kosong";
+  if (isEmpty(data.drugs)) errors.drugs = "Drugs tidak boleh kosong";
   if (!isInt(data.total_biaya)) errors.total_biaya = "Total biaya harus int";
   return {
     errors,

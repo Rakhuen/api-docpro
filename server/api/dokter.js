@@ -43,7 +43,11 @@ exports.signupDokter = async (req, res) => {
       is_deleted: false,
     });
     if (searchDokter.length > 0)
-      return res.status(400).json({ message: "username sudah ada" });
+      return res.status(400).json({
+        message: "username is already exists",
+        status: 400,
+        date: new Date().getTime(),
+      });
 
     const insertDokter = await knex("doctor").insert(signupData);
     const id_dokter = insertDokter;
@@ -55,16 +59,22 @@ exports.signupDokter = async (req, res) => {
         id_doctor: data.id_doctor,
       },
       "docprosupersecretkey",
-      { expiresIn: "20h" }
+      { expiresIn: "24h" }
     );
 
-    return res.status(200).json({ id_doctor: data.id_doctor, token });
+    const tokenEks = new Date().getTime() + 24 * 60 * 60 * 1000;
+    return res.status(200).json({
+      id_doctor: dokter.id_doctor,
+      token,
+      expiresToken: tokenEks,
+    });
   } catch (err) {
-    console.log(err);
-
-    return res
-      .status(400)
-      .json({ message: "Something went wrong!", error: err });
+    return res.status(400).json({
+      message: "Something went wrong!",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
@@ -84,7 +94,11 @@ exports.loginDokter = async (req, res) => {
     });
 
     if (findDokter.length === 0)
-      return res.status(404).json({ message: "Doctor not found" });
+      return res.status(404).json({
+        message: "Doctor not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
     let dokter = findDokter[0];
 
     const decryptPassword = await bcrypt.compare(
@@ -92,7 +106,11 @@ exports.loginDokter = async (req, res) => {
       dokter.password
     );
     if (!decryptPassword)
-      return res.status(400).json({ message: "Password tidak sama" });
+      return res.status(400).json({
+        message: "Passwords are not the same",
+        status: 400,
+        date: new Date().getTime(),
+      });
 
     const token = jwt.sign(
       { id_doctor: dokter.id_doctor },
@@ -100,14 +118,29 @@ exports.loginDokter = async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    return res.status(200).json({ id_doctor: dokter.id_doctor, token });
+    const tokenEks = new Date().getTime() + 24 * 60 * 60 * 1000;
+    return res.status(200).json({
+      id_doctor: dokter.id_doctor,
+      token,
+      expiresToken: tokenEks,
+    });
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong!" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
 exports.updateDokter = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
   const id_doctor = req.id_doctor;
 
   let data = {
@@ -128,7 +161,11 @@ exports.updateDokter = async (req, res) => {
     let oldProfilePicture = doctor.photo;
     if (!req.file) {
       await knex("doctor").update(data).where({ id_doctor });
-      return res.status(200).json({ message: "Doctor is up to date" });
+      return res.status(200).json({
+        message: "Doctor is up to date",
+        status: 200,
+        date: new Date().getTime(),
+      });
     }
     cloudinary.config({
       cloud_name: "dteyro1dc",
@@ -157,42 +194,82 @@ exports.updateDokter = async (req, res) => {
 
     const photo = findPhotoDocter[0].photo;
     if (oldProfilePicture === photo) {
-      return res.status(200).json({ message: "Doctor is up to date" });
+      return res.status(200).json({
+        message: "Doctor is up to date",
+        status: 200,
+        date: new Date().getTime(),
+      });
     } else if (oldProfilePicture !== photo) {
       const deleteImg = await cloudinary.uploader.destroy(
         `img-dokter/${oldProfilePicture}`
       );
       if (deleteImg.result === "ok")
         console.log({ msg: "img has been deleted", ...result });
-      return res.status(200).json({ message: "Doctor is up to date" });
+      return res.status(200).json({
+        message: "Doctor is up to date",
+        status: 200,
+        date: new Date().getTime(),
+      });
     }
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong", err });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
 exports.deleteDokter = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
   const id_doctor_auth = req.id_doctor;
   const id_doctor = req.query.id;
 
   try {
     const findDoctor = await knex("doctor").where({ id_doctor });
     if (findDoctor.length === 0)
-      return res.status(404).json({ message: "Doctor not found" });
+      return res.status(404).json({
+        message: "Doctor is not found",
+        status: 404,
+        date: new Date().getTime(),
+      });
 
     if (id_doctor === id_doctor_auth.toString())
-      return res.status(400).json({ message: "Cant delete your own account" });
+      return res.status(400).json({
+        message: "Cant delete your own account",
+        status: 400,
+        date: new Date().getTime(),
+      });
 
     await knex("doctor").where({ id_doctor }).update({ is_deleted: true });
-    return res.status(200).json({ message: "Doctor is deleted" });
+    return res.status(200).json({
+      message: "Doctor is deleted",
+      status: 200,
+      date: new Date().getTime(),
+    });
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
 
 exports.getDataDokter = async (req, res) => {
-  if (!req.isAuth) return res.status(401).json({ message: "Unauthorization" });
+  if (!req.isAuth)
+    return res.status(401).json({
+      message: "Unauthorization",
+      status: 401,
+      date: new Date().getTime(),
+    });
   const id_doctor = req.id_doctor;
 
   try {
@@ -203,6 +280,11 @@ exports.getDataDokter = async (req, res) => {
 
     return res.status(200).json(detailDokter);
   } catch (err) {
-    return res.status(400).json({ message: "Something went wrong" });
+    return res.status(400).json({
+      message: "Something went wrong",
+      status: 400,
+      date: new Date().getTime(),
+      err,
+    });
   }
 };
