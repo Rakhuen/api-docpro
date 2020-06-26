@@ -294,11 +294,15 @@
   <tr>
     <td>/diagnosa</td>
     <td>POST</td>
-    <td>untuk membuat diagnosa, field yg dibutuhkan id_appointment</td>
+    <td>untuk membuat diagnosa, field yg dibutuhkan id_appointment. 
+    <br/> Untuk value drugs dan service, value yang dikirim berupa id dari drugs, dan services. 
+    <br/> cara kirimnya di gabung dalam satu string dan di tambahin koma, seperti drugs: "1,2,3", services: "4,5,6"</td>
     <td> 
       <ul>
         <li>id_appointment</li>
         <li>penanganan</li>
+        <li>services</li>
+        <li>drugs</li>
         <li>total_biaya</li>
       </ul>
     </td>
