@@ -31,8 +31,14 @@ exports.signupDokter = async (req, res) => {
     is_deleted: false,
   };
 
-  const { valid, errors } = validateSignupDokter(signupData);
-  if (!valid) return res.status(400).json(errors);
+  const { valid } = validateSignupDokter(signupData);
+  if (!valid)
+    return res.status(400).json({
+      message:
+        "All fields is required (nama, npa, alamat, username, password, phone, email, tanggal_lahir)",
+      status: 400,
+      date: new Date().getTime(),
+    });
 
   try {
     encryptPassword = await bcrypt.hash(req.body.password, 12);
@@ -85,7 +91,28 @@ exports.loginDokter = async (req, res) => {
     password: req.body.password,
   };
   const { valid, errors } = validateLoginDokter(data);
-  if (!valid) return res.status(400).json(errors);
+
+  if (!valid) {
+    if (errors.username && errors.password) {
+      return res.status(400).json({
+        message: "Username & Password is required",
+        status: 400,
+        date: new Date().getTime(),
+      });
+    } else if (errors.username) {
+      return res.status(400).json({
+        message: "Username is required",
+        status: 400,
+        date: new Date().getTime(),
+      });
+    } else if (errors.password) {
+      return res.status(400).json({
+        message: "Password is required",
+        status: 400,
+        date: new Date().getTime(),
+      });
+    }
+  }
 
   try {
     const findDokter = await knex("doctor").where({
@@ -152,8 +179,14 @@ exports.updateDokter = async (req, res) => {
     tanggal_lahir: req.body.tanggal_lahir,
   };
 
-  const { valid, errors } = validateUpdateDokter(data);
-  if (!valid) return res.status(400).json(errors);
+  const { valid } = validateUpdateDokter(data);
+  if (!valid)
+    return res.status(400).json({
+      message:
+        "All fields is required (nama, npa, alamat, username, password, phone, email, tanggal_lahir), except photo",
+      status: 400,
+      date: new Date().getTime(),
+    });
 
   try {
     const findDokter = await knex("doctor").where({ id_doctor });

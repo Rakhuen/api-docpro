@@ -21,8 +21,14 @@ exports.addNewDiagnosa = async (req, res) => {
     drugs: req.body.drugs,
   };
 
-  const { valid, errors } = validateDiagnosa(data);
-  if (!valid) return res.status(400).json(errors);
+  const { valid } = validateDiagnosa(data);
+  if (!valid)
+    return res.status(400).json({
+      message:
+        "All fields is required (id_appointment, penanganan, total_biaya, services, drugs)",
+      status: 400,
+      date: new Date().getTime(),
+    });
 
   try {
     const findAppointment = await knex("appointment").where({
@@ -45,9 +51,27 @@ exports.addNewDiagnosa = async (req, res) => {
       });
     const findDoctor = await knex("doctor").where({ id_doctor });
     data.doctor = findDoctor[0].nama;
+
+    const splitDrugs = data.drugs.split(",");
+    const drugs = await knex("drugs").whereIn("id_drug", splitDrugs);
+    let drug_count = false;
+    drugs.forEach((drug) => {
+      if (drug.drug_count === 0) {
+        return (drug_count = true);
+      }
+    });
+
+    if (drug_count)
+      return res.status(400).json({
+        message: "Drug have 0 values",
+        status: 400,
+        date: new Date().getTime(),
+      });
+
     const diagnosa = await knex("diagnosa").insert(data);
     const id_diagnosa = diagnosa;
     const id_appointment = await knex("diagnosa").where({ id_diagnosa });
+
     await knex("appointment")
       .where("id_appointment", id_appointment[0].id_appointment)
       .update({ is_checked: true });
@@ -61,14 +85,12 @@ exports.addNewDiagnosa = async (req, res) => {
         .update({ is_checked: true, added_on: today });
     }
 
-    const splitDrugs = data.drugs.split(",");
-    const drugs = await knex("drugs").whereIn("id_drug", splitDrugs);
     drugs.forEach(async (drug) => {
       await knex("drugs")
-        .where("id_drug", drug.id_drug)
         .update({
           drug_count: drug.drug_count - 1,
-        });
+        })
+        .where("id_drug", drug.id_drug);
     });
 
     return res.status(200).json({

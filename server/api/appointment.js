@@ -29,8 +29,14 @@ exports.newAppointment = async (req, res) => {
     is_checked: false,
   };
 
-  const { valid, errors } = validateAppointment(data);
-  if (!valid) return res.status(400).json(errors);
+  const { valid } = validateAppointment(data);
+  if (!valid)
+    return res.status(400).json({
+      message:
+        "All fields is required (id_pasien, keperluan, tanggal, jam, keluhan), except photo",
+      status: 400,
+      date: new Date().getTime(),
+    });
 
   const newDate = data.tanggal.split("/").reverse().join("-");
   data.tanggal = newDate;

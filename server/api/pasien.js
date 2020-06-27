@@ -36,8 +36,14 @@ exports.addPasien = async (req, res) => {
     url_photo: "default.png",
   };
 
-  const { valid, errors } = validatePasien(data);
-  if (!valid) return res.status(400).json(errors);
+  const { valid } = validatePasien(data);
+  if (!valid)
+    return res.status(400).json({
+      message:
+        "All fields is required (nama, nik, tanggal_lahir, alamat, phone), except photo",
+      status: 400,
+      date: new Date().getTime(),
+    });
 
   try {
     const nik = encrypt.encryptNik(data.nik);
@@ -174,8 +180,14 @@ exports.updatePasien = async (req, res) => {
     phone: req.body.phone,
   };
 
-  const { valid, errors } = validatePasien(data);
-  if (!valid) return res.status(400).json(errors);
+  const { valid } = validatePasien(data);
+  if (!valid)
+    return res.status(400).json({
+      message:
+        "All fields is required (nama, nik, tanggal_lahir, alamat, phone), except photo",
+      status: 400,
+      date: new Date().getTime(),
+    });
 
   try {
     const nik = encrypt.encryptNik(data.nik);

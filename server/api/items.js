@@ -18,8 +18,14 @@ exports.addNewService = async (req, res) => {
     service_price: req.body.service_price,
   };
 
-  const { valid, errors } = validateService(data);
-  if (!valid) return res.status(400).json(errors);
+  const { valid } = validateService(data);
+  if (!valid)
+    return res.status(400).json({
+      message:
+        "All fields is required (service_name, service_desc, service_price)",
+      status: 400,
+      date: new Date().getTime(),
+    });
 
   try {
     await knex("services").insert(data);
@@ -138,8 +144,14 @@ exports.updateService = async (req, res) => {
     service_price: req.body.service_price,
   };
 
-  const { valid, errors } = validateService(data);
-  if (!valid) return res.status(400).json(errors);
+  const { valid } = validateService(data);
+  if (!valid)
+    return res.status(400).json({
+      message:
+        "All fields is required (service_name, service_desc, service_price)",
+      status: 400,
+      date: new Date().getTime(),
+    });
 
   try {
     const findService = await knex("services").where({ id_service });
@@ -182,8 +194,14 @@ exports.addNewDrug = async (req, res) => {
     drug_count: req.body.drug_count,
   };
 
-  const { valid, errors } = validateDrug(data);
-  if (!valid) return res.status(400).json(errors);
+  const { valid } = validateDrug(data);
+  if (!valid)
+    return res.status(400).json({
+      message:
+        "All fields is required (drug_name, drug_desc, drug_price, drug_count)",
+      status: 400,
+      date: new Date().getTime(),
+    });
 
   try {
     await knex("drugs").insert(data);
@@ -301,8 +319,14 @@ exports.updateDrug = async (req, res) => {
     drug_count: req.body.drug_count,
   };
 
-  const { valid, errors } = validateDrug(data);
-  if (!valid) return res.status(400).json(errors);
+  const { valid } = validateDrug(data);
+  if (!valid)
+    return res.status(400).json({
+      message:
+        "All fields is required (drug_name, drug_desc, drug_price, drug_count)",
+      status: 400,
+      date: new Date().getTime(),
+    });
 
   try {
     const findDrug = await knex("drugs").where({ id_drug });
