@@ -447,7 +447,7 @@ exports.getDetailsPasien = async (req, res) => {
       return history;
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 200));
     const allUser = { pasien, historys, photos };
 
     return res.status(200).json(allUser);

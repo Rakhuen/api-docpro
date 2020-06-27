@@ -48,7 +48,7 @@ exports.getHitory = async (req, res) => {
         phone,
         photo: hstry.url_photo,
       };
-      let appointmet = {
+      let appointment = {
         id_appointment: hstry.id_appointment,
         keperluan: hstry.keperluan,
         tanggal: formatDate,
@@ -64,11 +64,11 @@ exports.getHitory = async (req, res) => {
         drugs,
         total_biaya: hstry.total_biaya,
       };
-      newHistory.push({ pasien, appointmet, diagnosa });
+      newHistory.push({ pasien, appointment, diagnosa });
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     return res.status(200).json(newHistory);
   } catch (err) {
