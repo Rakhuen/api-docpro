@@ -67,8 +67,8 @@ exports.getHitory = async (req, res) => {
       newHistory.push({ pasien, appointment, diagnosa });
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     return res.status(200).json(newHistory);
   } catch (err) {
