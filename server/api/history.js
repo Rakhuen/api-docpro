@@ -26,12 +26,18 @@ exports.getHitory = async (req, res) => {
         date: new Date().getTime(),
       });
 
-    history.forEach((hstry) => {
+    history.forEach(async (hstry) => {
       const formatDate = moment(hstry.tanggal).format("YYYY-MM-DD");
       const nik = encrypt.decryptNik(hstry.nik);
       const alamat = encrypt.decryptAlamat(hstry.alamat);
       const phone = encrypt.decryptPhone(hstry.phone);
       const tanggal_lahir = encrypt.decryptTtl(hstry.tanggal_lahir);
+
+      const splitService = hstry.services.split(",");
+      const splitDrugs = hstry.drugs.split(",");
+
+      let services = await knex("services").whereIn("id_service", splitService);
+      let drugs = await knex("drugs").whereIn("id_drug", splitDrugs);
 
       let pasien = {
         id_pasien: hstry.id_pasien,
@@ -54,10 +60,15 @@ exports.getHitory = async (req, res) => {
         id_diagnosa: hstry.id_diagnosa,
         penanganan: hstry.penanganan,
         doctor: hstry.doctor,
+        services,
+        drugs,
         total_biaya: hstry.total_biaya,
       };
       newHistory.push({ pasien, appointmet, diagnosa });
     });
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     return res.status(200).json(newHistory);
   } catch (err) {

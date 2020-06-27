@@ -1,7 +1,6 @@
 const connection = require("../config/connection");
 const knex = require("knex")(connection);
 const fs = require("fs");
-const path = require("path");
 const moment = require("moment");
 
 const cloudinary = require("cloudinary").v2;
