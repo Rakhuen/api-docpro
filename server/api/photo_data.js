@@ -6,17 +6,19 @@ const moment = require("moment");
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
-  cloud_name: "dteyro1dc",
-  api_key: "173916758465975",
-  api_secret: "jl8vCMKUlRlgNEBV2NGepOgpmfQ",
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
 });
+
+const getTimestamp = new Date().getTime();
 
 exports.addNewPhotoData = async (req, res) => {
   if (!req.isAuth)
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   const today = moment(Date.now()).format("YYYY-MM-DD");
 
@@ -36,14 +38,14 @@ exports.addNewPhotoData = async (req, res) => {
       return res.status(404).json({
         message: "Pasien not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     if (!req.file)
       return res.status(404).json({
         message: "File photo is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     const path = req.file.path;
@@ -63,13 +65,13 @@ exports.addNewPhotoData = async (req, res) => {
     return res.status(200).json({
       message: "Photo is added",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -80,7 +82,7 @@ exports.deletePhotoData = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   const id = req.query.id;
   try {
@@ -93,7 +95,7 @@ exports.deletePhotoData = async (req, res) => {
       return res.status(404).json({
         message: "Photo is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     photo = find[0].photo;
@@ -103,7 +105,7 @@ exports.deletePhotoData = async (req, res) => {
       return res.status(200).json({
         message: "Photo is deleted",
         status: 200,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     } else {
       const deleteImg = await cloudinary.uploader.destroy(`img-data/${photo}`);
@@ -111,14 +113,14 @@ exports.deletePhotoData = async (req, res) => {
         return res.status(200).json({
           message: "Photo is deleted",
           status: 200,
-          date: new Date().getTime(),
+          timestamp: getTimestamp,
         });
     }
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }

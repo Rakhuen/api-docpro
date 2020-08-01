@@ -7,19 +7,22 @@ const encrypt = require("../util/encrypt");
 const { resolve } = require("path");
 
 const cloudinary = require("cloudinary").v2;
+require("dotenv").config();
 
 cloudinary.config({
-  cloud_name: "dteyro1dc",
-  api_key: "173916758465975",
-  api_secret: "jl8vCMKUlRlgNEBV2NGepOgpmfQ",
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
 });
+
+const getTimestamp = new Date().getTime();
 
 exports.addPasien = async (req, res) => {
   if (!req.isAuth)
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const today = moment(Date.now()).format("YYYY-MM-DD");
@@ -36,13 +39,13 @@ exports.addPasien = async (req, res) => {
     url_photo: "default.png",
   };
 
-  const { valid } = validatePasien(data);
+  const { valid, errors } = validatePasien(data);
   if (!valid)
     return res.status(400).json({
-      message:
-        "All fields is required (nama, nik, tanggal_lahir, alamat, phone), except photo",
+      message: "Something is invalid...",
       status: 400,
-      date: new Date().getTime(),
+      payload: errors,
+      timestamp: getTimestamp,
     });
 
   try {
@@ -60,7 +63,7 @@ exports.addPasien = async (req, res) => {
       return res.status(400).json({
         message: "Alamat tidak boleh terlalu panjang, singkat, padat dan jelas",
         status: 400,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     const noinduk = await knex("pasien").where({ nik: data.nik });
@@ -68,7 +71,7 @@ exports.addPasien = async (req, res) => {
       return res.status(400).json({
         message: "Pasien is already registered",
         status: 400,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     if (!req.file) {
@@ -112,7 +115,7 @@ exports.addPasien = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   }
 };
@@ -122,7 +125,7 @@ exports.searchPasien = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const nama = req.query.nama;
@@ -131,7 +134,7 @@ exports.searchPasien = async (req, res) => {
       return res.status(404).json({
         message: "Parameter is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     const user = await knex("pasien")
@@ -143,7 +146,7 @@ exports.searchPasien = async (req, res) => {
       return res.status(404).json({
         message: "Pasien is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     let allPasien = [];
@@ -158,7 +161,7 @@ exports.searchPasien = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   }
 };
@@ -168,7 +171,7 @@ exports.updatePasien = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   const id_pasien = req.query.id;
 
@@ -180,13 +183,13 @@ exports.updatePasien = async (req, res) => {
     phone: req.body.phone,
   };
 
-  const { valid } = validatePasien(data);
+  const { valid, errors } = validatePasien(data);
   if (!valid)
     return res.status(400).json({
-      message:
-        "All fields is required (nama, nik, tanggal_lahir, alamat, phone), except photo",
+      message: "Something is invalid...",
       status: 400,
-      date: new Date().getTime(),
+      payload: errors,
+      timestamp: getTimestamp,
     });
 
   try {
@@ -204,7 +207,7 @@ exports.updatePasien = async (req, res) => {
       return res.status(400).json({
         message: "Alamat tidak boleh terlalu panjang, singkat, padat dan jelas",
         status: 400,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     const findUser = await knex("pasien").where({
       id_pasien,
@@ -214,7 +217,7 @@ exports.updatePasien = async (req, res) => {
       return res.status(404).json({
         message: "Pasien is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     const pasien = findUser[0];
@@ -224,7 +227,7 @@ exports.updatePasien = async (req, res) => {
       return res.status(200).json({
         message: "Pasien is up to date",
         status: 200,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     }
 
@@ -250,7 +253,7 @@ exports.updatePasien = async (req, res) => {
       return res.status(200).json({
         message: "Pasien is up to date and photo is not changed",
         status: 200,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     } else if (oldImagePasien !== photo) {
       const deleteImg = await cloudinary.uploader.destroy(
@@ -260,14 +263,14 @@ exports.updatePasien = async (req, res) => {
         return res.status(200).json({
           message: "Pasien is up to date",
           status: 200,
-          date: new Date().getTime(),
+          timestamp: getTimestamp,
         });
     }
   } catch (err) {
     return res.status(400).json({
       message: "Something wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -278,7 +281,7 @@ exports.deletePasien = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   const id_pasien = req.query.id;
 
@@ -291,7 +294,7 @@ exports.deletePasien = async (req, res) => {
       return res.status(404).json({
         message: "Pasien is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     await knex("pasien").where({ id_pasien }).update({
@@ -301,13 +304,13 @@ exports.deletePasien = async (req, res) => {
     return res.status(200).json({
       message: "Pasien is deleted",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -318,7 +321,7 @@ exports.getAllPasien = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   try {
     let pasien = await knex("pasien")
@@ -349,7 +352,7 @@ exports.getAllPasien = async (req, res) => {
     return res.status(400).json({
       message: "Something wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   }
 };
@@ -359,7 +362,7 @@ exports.getDetailsPasien = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const id_pasien = req.query.id;
@@ -376,7 +379,7 @@ exports.getDetailsPasien = async (req, res) => {
       return res.status(404).json({
         message: "Pasien is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     const formatDate = moment(findPasien[0].added_on).format("YYYY-MM-DD");
     findPasien[0].added_on = formatDate;
@@ -455,7 +458,7 @@ exports.getDetailsPasien = async (req, res) => {
     return res.status(400).json({
       message: "Something wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }

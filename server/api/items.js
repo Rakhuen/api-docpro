@@ -3,13 +3,15 @@ const knex = require("knex")(connection);
 
 const { validateDrug, validateService } = require("../validation/isValid");
 
+const getTimestamp = new Date().getTime();
+
 // Item Service --------------------------------------------------------------
 exports.addNewService = async (req, res) => {
   if (!req.isAuth)
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const data = {
@@ -18,13 +20,13 @@ exports.addNewService = async (req, res) => {
     service_price: req.body.service_price,
   };
 
-  const { valid } = validateService(data);
+  const { valid, errors } = validateService(data);
   if (!valid)
     return res.status(400).json({
-      message:
-        "All fields is required (service_name, service_desc, service_price)",
+      message: "Something is invalid...",
       status: 400,
-      date: new Date().getTime(),
+      payload: errors,
+      timestamp: getTimestamp,
     });
 
   try {
@@ -32,13 +34,13 @@ exports.addNewService = async (req, res) => {
     return res.status(200).json({
       message: "Service is added",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -49,7 +51,7 @@ exports.deleteService = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const id_service = req.query.id;
@@ -59,20 +61,20 @@ exports.deleteService = async (req, res) => {
       return res.status(404).json({
         message: "Service is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     await knex("services").where({ id_service }).del();
     return res.status(200).json({
       message: "Service is deleted",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -83,7 +85,7 @@ exports.getServices = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   try {
@@ -93,7 +95,7 @@ exports.getServices = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   }
 };
@@ -103,7 +105,7 @@ exports.detailService = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const id_service = req.query.id;
@@ -114,7 +116,7 @@ exports.detailService = async (req, res) => {
       return res.status(404).json({
         message: "Service is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     return res.status(200).json(findItem[0]);
@@ -122,7 +124,7 @@ exports.detailService = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -133,7 +135,7 @@ exports.updateService = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const id_service = req.query.id;
@@ -144,13 +146,13 @@ exports.updateService = async (req, res) => {
     service_price: req.body.service_price,
   };
 
-  const { valid } = validateService(data);
+  const { valid, errors } = validateService(data);
   if (!valid)
     return res.status(400).json({
-      message:
-        "All fields is required (service_name, service_desc, service_price)",
+      message: "Something is invalid...",
       status: 400,
-      date: new Date().getTime(),
+      payload: errors,
+      timestamp: getTimestamp,
     });
 
   try {
@@ -159,20 +161,20 @@ exports.updateService = async (req, res) => {
       return res.status(404).json({
         message: "Service is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     await knex("services").where({ id_service }).update(data);
     return res.status(200).json({
       message: "Service is updated",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -184,7 +186,7 @@ exports.addNewDrug = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const data = {
@@ -194,13 +196,13 @@ exports.addNewDrug = async (req, res) => {
     drug_count: req.body.drug_count,
   };
 
-  const { valid } = validateDrug(data);
+  const { valid, errors } = validateDrug(data);
   if (!valid)
     return res.status(400).json({
-      message:
-        "All fields is required (drug_name, drug_desc, drug_price, drug_count)",
+      message: "Something is invalid...",
       status: 400,
-      date: new Date().getTime(),
+      payload: errors,
+      timestamp: getTimestamp,
     });
 
   try {
@@ -208,13 +210,13 @@ exports.addNewDrug = async (req, res) => {
     return res.status(200).json({
       message: "Drug is added",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   }
 };
@@ -224,7 +226,7 @@ exports.getDrugs = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   try {
@@ -234,7 +236,7 @@ exports.getDrugs = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   }
 };
@@ -244,7 +246,7 @@ exports.detailDrug = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const id_drug = req.query.id;
@@ -255,7 +257,7 @@ exports.detailDrug = async (req, res) => {
       return res.status(404).json({
         message: "Drug is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     return res.status(200).json(findDrug[0]);
@@ -263,7 +265,7 @@ exports.detailDrug = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   }
 };
@@ -273,7 +275,7 @@ exports.deleteDrug = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const id_drug = req.query.id;
@@ -283,20 +285,20 @@ exports.deleteDrug = async (req, res) => {
       return res.status(404).json({
         message: "Drug is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     await knex("drugs").where({ id_drug }).del();
     return res.status(200).json({
       message: "Drug is deleted",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -307,7 +309,7 @@ exports.updateDrug = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const id_drug = req.query.id;
@@ -319,13 +321,13 @@ exports.updateDrug = async (req, res) => {
     drug_count: req.body.drug_count,
   };
 
-  const { valid } = validateDrug(data);
+  const { valid, errors } = validateDrug(data);
   if (!valid)
     return res.status(400).json({
-      message:
-        "All fields is required (drug_name, drug_desc, drug_price, drug_count)",
+      message: "Something is invalid...",
       status: 400,
-      date: new Date().getTime(),
+      payload: errors,
+      timestamp: getTimestamp,
     });
 
   try {
@@ -334,20 +336,20 @@ exports.updateDrug = async (req, res) => {
       return res.status(404).json({
         message: "Drug is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     await knex("drugs").where({ id_drug }).update(data);
     return res.status(200).json({
       message: "Drug is updated",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }

@@ -3,12 +3,14 @@ const knex = require("knex")(connection);
 const moment = require("moment");
 const encrypt = require("../util/encrypt");
 
+const getTimestamp = new Date().getTime();
+
 exports.getHitory = async (req, res) => {
   if (!req.isAuth)
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   try {
@@ -23,7 +25,7 @@ exports.getHitory = async (req, res) => {
       return res.status(404).json({
         message: "History is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     history.forEach(async (hstry) => {
@@ -75,7 +77,7 @@ exports.getHitory = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }

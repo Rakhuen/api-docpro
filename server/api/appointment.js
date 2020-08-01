@@ -5,19 +5,22 @@ const moment = require("moment");
 
 const { validateAppointment } = require("../validation/isValid");
 const cloudinary = require("cloudinary").v2;
+require("dotenv").config();
 
 cloudinary.config({
-  cloud_name: "dteyro1dc",
-  api_key: "173916758465975",
-  api_secret: "jl8vCMKUlRlgNEBV2NGepOgpmfQ",
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
 });
+
+const getTimestamp = new Date().getTime();
 
 exports.newAppointment = async (req, res) => {
   if (!req.isAuth)
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   let data = {
@@ -29,13 +32,13 @@ exports.newAppointment = async (req, res) => {
     is_checked: false,
   };
 
-  const { valid } = validateAppointment(data);
+  const { valid, errors } = validateAppointment(data);
   if (!valid)
     return res.status(400).json({
-      message:
-        "All fields is required (id_pasien, keperluan, tanggal, jam, keluhan), except photo",
+      message: "Something is invalid...",
       status: 400,
-      date: new Date().getTime(),
+      payload: errors,
+      timestamp: getTimestamp,
     });
 
   const newDate = data.tanggal.split("/").reverse().join("-");
@@ -49,7 +52,7 @@ exports.newAppointment = async (req, res) => {
       return res.status(404).json({
         message: "Pasien is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     const checkTanggalDanJam = await knex("appointment").where({
       tanggal: data.tanggal,
@@ -59,7 +62,7 @@ exports.newAppointment = async (req, res) => {
       return res.status(400).json({
         message: "Appointment already exists",
         status: 400,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     if (!req.file) {
@@ -67,7 +70,7 @@ exports.newAppointment = async (req, res) => {
       return res.status(200).json({
         message: "Appointment is successfully created",
         status: 200,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     }
 
@@ -98,13 +101,13 @@ exports.newAppointment = async (req, res) => {
     return res.status(200).json({
       message: "Appointment is successfully created",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -115,7 +118,7 @@ exports.deleteAppointment = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const id = req.query.id;
@@ -128,7 +131,7 @@ exports.deleteAppointment = async (req, res) => {
       return res.status(404).json({
         message: "Appointment is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     let photo;
@@ -146,7 +149,7 @@ exports.deleteAppointment = async (req, res) => {
       return res.status(200).json({
         message: "Appointment is deleted",
         status: 200,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     } else {
       const deleteImg = await cloudinary.uploader.destroy(`img-data/${photo}`);
@@ -154,14 +157,14 @@ exports.deleteAppointment = async (req, res) => {
         return res.status(200).json({
           message: "Appointment is deleted",
           status: 200,
-          date: new Date().getTime(),
+          timestamp: getTimestamp,
         });
     }
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -172,7 +175,7 @@ exports.appointment = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const today = moment(Date.now()).format("YYYY-MM-DD");
@@ -187,7 +190,7 @@ exports.appointment = async (req, res) => {
       return res.status(404).json({
         message: "Appointment is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     const newAppointment = [];
@@ -202,7 +205,7 @@ exports.appointment = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -213,7 +216,7 @@ exports.filterAppointment = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   const tanggal = req.query.tanggal;
 
@@ -235,7 +238,7 @@ exports.filterAppointment = async (req, res) => {
       return res.status(404).json({
         message: "Appointment is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     const newAppointment = [];
@@ -250,7 +253,7 @@ exports.filterAppointment = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -261,7 +264,7 @@ exports.getSingleAppointment = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
 
   const id_appointment = req.query.id;
@@ -276,7 +279,7 @@ exports.getSingleAppointment = async (req, res) => {
       return res.status(404).json({
         message: "Appointment is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     let dataAppointment = appointment[0];
@@ -288,7 +291,7 @@ exports.getSingleAppointment = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }

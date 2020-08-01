@@ -10,6 +10,9 @@ const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const cloudinary = require("cloudinary").v2;
+require("dotenv").config();
+
+const getTimestamp = new Date().getTime();
 
 exports.signupDokter = async (req, res) => {
   let encryptPassword;
@@ -31,13 +34,13 @@ exports.signupDokter = async (req, res) => {
     is_deleted: false,
   };
 
-  const { valid } = validateSignupDokter(signupData);
+  const { valid, errors } = validateSignupDokter(signupData);
   if (!valid)
     return res.status(400).json({
-      message:
-        "All fields is required (nama, npa, alamat, username, password, phone, email, tanggal_lahir)",
+      message: "Something is invalid...",
       status: 400,
-      date: new Date().getTime(),
+      payload: errors,
+      timestamp: getTimestamp,
     });
 
   try {
@@ -52,7 +55,7 @@ exports.signupDokter = async (req, res) => {
       return res.status(400).json({
         message: "username is already exists",
         status: 400,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     const insertDokter = await knex("doctor").insert(signupData);
@@ -68,7 +71,7 @@ exports.signupDokter = async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    const tokenEks = new Date().getTime() + 24 * 60 * 60 * 1000;
+    const tokenEks = getTimestamp + 24 * 60 * 60 * 1000;
     return res.status(200).json({
       id_doctor: dokter.id_doctor,
       token,
@@ -78,7 +81,7 @@ exports.signupDokter = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong!",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -92,27 +95,13 @@ exports.loginDokter = async (req, res) => {
   };
   const { valid, errors } = validateLoginDokter(data);
 
-  if (!valid) {
-    if (errors.username && errors.password) {
-      return res.status(400).json({
-        message: "Username & Password is required",
-        status: 400,
-        date: new Date().getTime(),
-      });
-    } else if (errors.username) {
-      return res.status(400).json({
-        message: "Username is required",
-        status: 400,
-        date: new Date().getTime(),
-      });
-    } else if (errors.password) {
-      return res.status(400).json({
-        message: "Password is required",
-        status: 400,
-        date: new Date().getTime(),
-      });
-    }
-  }
+  if (!valid)
+    return res.status(400).json({
+      message: "Something is invalid...",
+      status: 400,
+      payload: errors,
+      timestamp: getTimestamp,
+    });
 
   try {
     const findDokter = await knex("doctor").where({
@@ -124,7 +113,7 @@ exports.loginDokter = async (req, res) => {
       return res.status(404).json({
         message: "Doctor not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     let dokter = findDokter[0];
 
@@ -136,7 +125,7 @@ exports.loginDokter = async (req, res) => {
       return res.status(400).json({
         message: "Passwords are not the same",
         status: 400,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     const token = jwt.sign(
@@ -145,7 +134,7 @@ exports.loginDokter = async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    const tokenEks = new Date().getTime() + 24 * 60 * 60 * 1000;
+    const tokenEks = getTimestamp + 24 * 60 * 60 * 1000;
     return res.status(200).json({
       id_doctor: dokter.id_doctor,
       token,
@@ -155,7 +144,7 @@ exports.loginDokter = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -166,7 +155,7 @@ exports.updateDokter = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   const id_doctor = req.id_doctor;
 
@@ -179,13 +168,13 @@ exports.updateDokter = async (req, res) => {
     tanggal_lahir: req.body.tanggal_lahir,
   };
 
-  const { valid } = validateUpdateDokter(data);
+  const { valid, errors } = validateUpdateDokter(data);
   if (!valid)
     return res.status(400).json({
-      message:
-        "All fields is required (nama, npa, alamat, username, password, phone, email, tanggal_lahir), except photo",
+      message: "Something is invalid...",
       status: 400,
-      date: new Date().getTime(),
+      payload: errors,
+      timestamp: getTimestamp,
     });
 
   try {
@@ -197,13 +186,13 @@ exports.updateDokter = async (req, res) => {
       return res.status(200).json({
         message: "Doctor is up to date",
         status: 200,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     }
     cloudinary.config({
-      cloud_name: "dteyro1dc",
-      api_key: "173916758465975",
-      api_secret: "jl8vCMKUlRlgNEBV2NGepOgpmfQ",
+      cloud_name: process.env.CLOUD_NAME,
+      api_key: process.env.CLOUD_API_KEY,
+      api_secret: process.env.CLOUD_API_SECRET,
     });
 
     const path = req.file.path;
@@ -230,7 +219,7 @@ exports.updateDokter = async (req, res) => {
       return res.status(200).json({
         message: "Doctor is up to date",
         status: 200,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     } else if (oldProfilePicture !== photo) {
       const deleteImg = await cloudinary.uploader.destroy(
@@ -241,14 +230,14 @@ exports.updateDokter = async (req, res) => {
       return res.status(200).json({
         message: "Doctor is up to date",
         status: 200,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     }
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -259,7 +248,7 @@ exports.deleteDokter = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   const id_doctor_auth = req.id_doctor;
   const id_doctor = req.query.id;
@@ -270,27 +259,27 @@ exports.deleteDokter = async (req, res) => {
       return res.status(404).json({
         message: "Doctor is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     if (id_doctor === id_doctor_auth.toString())
       return res.status(400).json({
         message: "Cant delete your own account",
         status: 400,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     await knex("doctor").where({ id_doctor }).update({ is_deleted: true });
     return res.status(200).json({
       message: "Doctor is deleted",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
@@ -301,7 +290,7 @@ exports.getDataDokter = async (req, res) => {
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   const id_doctor = req.id_doctor;
 
@@ -316,7 +305,7 @@ exports.getDataDokter = async (req, res) => {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }

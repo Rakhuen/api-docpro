@@ -3,12 +3,14 @@ const knex = require("knex")(connection);
 const { validateDiagnosa } = require("../validation/isValid");
 const moment = require("moment");
 
+const getTimestamp = new Date().getTime();
+
 exports.addNewDiagnosa = async (req, res) => {
   if (!req.isAuth)
     return res.status(401).json({
       message: "Unauthorization",
       status: 401,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   const id_doctor = req.id_doctor;
   const today = moment(Date.now()).format("YYYY-MM-DD");
@@ -21,13 +23,13 @@ exports.addNewDiagnosa = async (req, res) => {
     drugs: req.body.drugs,
   };
 
-  const { valid } = validateDiagnosa(data);
+  const { valid, errors } = validateDiagnosa(data);
   if (!valid)
     return res.status(400).json({
-      message:
-        "All fields is required (id_appointment, penanganan, total_biaya, services, drugs)",
+      message: "Something is invalid...",
       status: 400,
-      date: new Date().getTime(),
+      payload: errors,
+      timestamp: getTimestamp,
     });
 
   try {
@@ -38,7 +40,7 @@ exports.addNewDiagnosa = async (req, res) => {
       return res.status(404).json({
         message: "Appointment is not found",
         status: 404,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     const filterDiagnosa = await knex("diagnosa").where({
       id_appointment: data.id_appointment,
@@ -47,7 +49,7 @@ exports.addNewDiagnosa = async (req, res) => {
       return res.status(400).json({
         message: "Appointment is already diagnosed",
         status: 400,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
     const findDoctor = await knex("doctor").where({ id_doctor });
     data.doctor = findDoctor[0].nama;
@@ -65,7 +67,7 @@ exports.addNewDiagnosa = async (req, res) => {
       return res.status(400).json({
         message: "Drug have 0 values",
         status: 400,
-        date: new Date().getTime(),
+        timestamp: getTimestamp,
       });
 
     const diagnosa = await knex("diagnosa").insert(data);
@@ -96,13 +98,13 @@ exports.addNewDiagnosa = async (req, res) => {
     return res.status(200).json({
       message: "Diagnosa is successfully created",
       status: 200,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
     });
   } catch (err) {
     return res.status(400).json({
       message: "Something went wrong",
       status: 400,
-      date: new Date().getTime(),
+      timestamp: getTimestamp,
       err,
     });
   }
